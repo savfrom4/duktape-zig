@@ -8,10 +8,8 @@ pub const c = @cImport({
 pub const Error = error{
     HeapAllocationError,
     EvaluationError,
-    CompilationError,
-    FunctionCallError,
-    NotFoundError,
-    InvalidArgument,
+    NameNotFound,
+    UnknownArgumentTypeError,
 };
 
 pub const Value = union(enum) {
@@ -53,7 +51,7 @@ pub const Context = struct {
         if (c.duk_pcompile_string(self.ctx, 0, code.ptr) != 0) {
             const err = std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null));
             std.log.err("duktape-zig compile error: {s}\n", .{err});
-            return Error.CompilationError;
+            return Error.EvaluationError;
         }
 
         _ = c.duk_pcall(self.ctx, 0);
@@ -67,7 +65,7 @@ pub const Context = struct {
         }
 
         if (c.duk_get_global_string(self.ctx, name.ptr) != 1) {
-            return Error.NotFoundError;
+            return Error.NameNotFound;
         }
 
         var nargs: c.duk_idx_t = 0;
@@ -84,7 +82,7 @@ pub const Context = struct {
 
                     else => {
                         std.log.err("Unknown type {any}", .{@typeName(@TypeOf(value))});
-                        return Error.InvalidArgument;
+                        return Error.UnknownArgumentTypeError;
                     },
                 }
                 nargs += 1;
@@ -94,7 +92,7 @@ pub const Context = struct {
         if (c.duk_pcall(self.ctx, nargs) != 0) {
             const err = std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null));
             std.log.err("duktape-zig error in {s}: {s}\n", .{ name, err });
-            return Error.FunctionCallError;
+            return Error.EvaluationError;
         }
 
         return get_stack_value(self);
