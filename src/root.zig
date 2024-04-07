@@ -40,7 +40,7 @@ pub const Context = struct {
     pub fn eval(self: *Self, code: []const u8) Error!?Value {
         if (c.duk_eval_raw(self.ctx, code.ptr, @as(c_int, 0), (((@as(c_int, 0) | c.DUK_COMPILE_EVAL) | c.DUK_COMPILE_NOSOURCE) | c.DUK_COMPILE_STRLEN) | c.DUK_COMPILE_NOFILENAME) != 0) {
             const err = std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null));
-            std.log.err("duktape-zig eval error: {s}\n", .{err});
+            std.log.err("evaluation error: {s}\n", .{err});
             return Error.EvaluationError;
         }
 
@@ -50,7 +50,7 @@ pub const Context = struct {
     pub fn compile(self: *Self, code: []const u8) Error!void {
         if (c.duk_pcompile_string(self.ctx, 0, code.ptr) != 0) {
             const err = std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null));
-            std.log.err("duktape-zig compile error: {s}\n", .{err});
+            std.log.err("compile error: {s}\n", .{err});
             return Error.EvaluationError;
         }
 
@@ -81,7 +81,7 @@ pub const Context = struct {
                     .Pointer => _ = c.duk_push_string(self.ctx, value.ptr),
 
                     else => {
-                        std.log.err("Unknown type {any}", .{@typeName(@TypeOf(value))});
+                        std.log.err("unknown argument type {any}", .{@typeName(@TypeOf(value))});
                         return Error.UnknownArgumentTypeError;
                     },
                 }
@@ -91,7 +91,7 @@ pub const Context = struct {
 
         if (c.duk_pcall(self.ctx, nargs) != 0) {
             const err = std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null));
-            std.log.err("duktape-zig error in {s}: {s}\n", .{ name, err });
+            std.log.err("error in function call {s}: {s}\n", .{ name, err });
             return Error.EvaluationError;
         }
 
