@@ -13,7 +13,7 @@ pub fn build(b: *std.Build) void {
     });
 
     clib.addCSourceFile(.{
-        .file = .{ .cwd_relative = "./duktape-2.7.0/duktape.c" },
+        .file = .{ .path = "duktape-2.7.0/duktape.c" },
         .flags = &[_][]const u8{"-fno-sanitize=undefined"},
     });
     clib.addIncludePath(.{ .cwd_relative = "./duktape-2.7.0/" });
