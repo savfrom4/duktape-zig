@@ -38,7 +38,7 @@ pub const Context = struct {
     }
 
     pub fn eval(self: *Self, code: []const u8) Error!?Value {
-        if (c.duk_eval_raw(self.ctx, code.ptr, code.len, (((@as(c_int, 0) | c.DUK_COMPILE_EVAL) | c.DUK_COMPILE_NOSOURCE) | c.DUK_COMPILE_STRLEN) | c.DUK_COMPILE_NOFILENAME) != 0) {
+        if (c.duk_eval_raw(self.ctx, code.ptr, code.len, ((((@as(c_int, 0) | c.DUK_COMPILE_EVAL) | c.DUK_COMPILE_NOSOURCE) | c.DUK_COMPILE_SAFE) | c.DUK_COMPILE_STRLEN) | c.DUK_COMPILE_NOFILENAME) != 0) {
             const err = std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null));
             std.log.err("evaluation error: {s}\n", .{err});
             return Error.EvaluationError;
