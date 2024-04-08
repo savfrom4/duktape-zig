@@ -38,7 +38,7 @@ pub const Context = struct {
     }
 
     pub fn eval(self: *Self, code: []const u8) Error!?Value {
-        if (c.duk_eval_raw(self.ctx, code.ptr, @as(c_int, 0), (((@as(c_int, 0) | c.DUK_COMPILE_EVAL) | c.DUK_COMPILE_NOSOURCE) | c.DUK_COMPILE_STRLEN) | c.DUK_COMPILE_NOFILENAME) != 0) {
+        if (c.duk_eval_raw(self.ctx, code.ptr, code.len, (((@as(c_int, 0) | c.DUK_COMPILE_EVAL) | c.DUK_COMPILE_NOSOURCE) | c.DUK_COMPILE_STRLEN) | c.DUK_COMPILE_NOFILENAME) != 0) {
             const err = std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null));
             std.log.err("evaluation error: {s}\n", .{err});
             return Error.EvaluationError;
@@ -48,7 +48,7 @@ pub const Context = struct {
     }
 
     pub fn compile(self: *Self, code: []const u8) Error!void {
-        if (c.duk_pcompile_string(self.ctx, 0, code.ptr) != 0) {
+        if (c.duk_pcompile_lstring(self.ctx, 0, code.ptr, code.len) != 0) {
             const err = std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null));
             std.log.err("compile error: {s}\n", .{err});
             return Error.EvaluationError;
@@ -64,7 +64,7 @@ pub const Context = struct {
             @compileError("args should be a struct or null");
         }
 
-        if (c.duk_get_global_string(self.ctx, name.ptr) != 1) {
+        if (c.duk_get_global_lstring(self.ctx, name.ptr, name.len) != 1) {
             return Error.NameNotFound;
         }
 
@@ -78,7 +78,7 @@ pub const Context = struct {
                     .ComptimeInt => c.duk_push_number(self.ctx, @floatFromInt(value)),
                     .Float => c.duk_push_number(self.ctx, @floatCast(value)),
                     .ComptimeFloat => c.duk_push_number(self.ctx, @floatCast(value)),
-                    .Pointer => _ = c.duk_push_string(self.ctx, value.ptr),
+                    .Pointer => _ = c.duk_push_lstring(self.ctx, value.ptr, @intCast(value.len)),
 
                     else => {
                         std.log.err("unknown argument type {any}", .{@typeName(@TypeOf(value))});
