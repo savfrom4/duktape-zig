@@ -25,7 +25,8 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-
+    
+    module.addIncludePath(.{ .path = "./duktape-2.7.0/" });
     module.linkLibrary(clib);
 
     // Unit tests
