@@ -16,7 +16,7 @@ pub fn build(b: *std.Build) void {
         .file = .{ .path = "duktape-2.7.0/duktape.c" },
         .flags = &[_][]const u8{"-fno-sanitize=undefined"},
     });
-    clib.addIncludePath(.{ .cwd_relative = "./duktape-2.7.0/" });
+    clib.addIncludePath(.{ .path = "./duktape-2.7.0/" });
     b.installArtifact(clib);
 
     // Main zig module
