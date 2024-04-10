@@ -39,8 +39,14 @@ pub const Context = struct {
 
     pub fn eval(self: *Self, code: []const u8) Error!?Value {
         if (c.duk_eval_raw(self.ctx, code.ptr, code.len, ((((@as(c_int, 0) | c.DUK_COMPILE_EVAL) | c.DUK_COMPILE_NOSOURCE) | c.DUK_COMPILE_SAFE) | c.DUK_COMPILE_STRLEN) | c.DUK_COMPILE_NOFILENAME) != 0) {
-            const err = std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null));
-            std.log.err("evaluation error: {s}\n", .{err});
+            if (c.duk_has_prop_string(self.ctx, -1, "stack") == 1) {
+                _ = c.duk_get_prop_string(self.ctx, -1, "stack");
+                std.log.err("evaluation error: {s}\n", .{std.mem.span(c.duk_require_lstring(self.ctx, -1, null))});
+            } else {
+                std.log.err("evaluation error: {s}\n", .{std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null))});
+            }
+
+            c.duk_pop(self.ctx);
             return Error.EvaluationError;
         }
 
