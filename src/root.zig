@@ -70,7 +70,7 @@ pub const Context = struct {
         c.duk_pop(self.ctx);
     }
 
-    pub fn call(self: *Self, name: []const u8, comptime args: anytype) Error!?Value {
+    pub fn call(self: *Self, name: []const u8, args: anytype) Error!?Value {
         const args_type = @typeInfo(@TypeOf(args));
         if (args_type != .Struct and args_type != .Null) {
             @compileError("args should be a struct or null");
