@@ -55,8 +55,14 @@ pub const Context = struct {
 
     pub fn compile(self: *Self, code: []const u8) Error!void {
         if (c.duk_pcompile_lstring(self.ctx, 0, code.ptr, code.len) != 0) {
-            const err = std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null));
-            std.log.err("compile error: {s}\n", .{err});
+            if (c.duk_has_prop_string(self.ctx, -1, "stack") == 1) {
+                _ = c.duk_get_prop_string(self.ctx, -1, "stack");
+                std.log.err("compile error: {s}\n", .{std.mem.span(c.duk_require_lstring(self.ctx, -1, null))});
+            } else {
+                std.log.err("compile error: {s}\n", .{std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null))});
+            }
+
+            c.duk_pop(self.ctx);
             return Error.EvaluationError;
         }
 
@@ -96,8 +102,14 @@ pub const Context = struct {
         }
 
         if (c.duk_pcall(self.ctx, nargs) != 0) {
-            const err = std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null));
-            std.log.err("error in function call {s}: {s}\n", .{ name, err });
+            if (c.duk_has_prop_string(self.ctx, -1, "stack") == 1) {
+                _ = c.duk_get_prop_string(self.ctx, -1, "stack");
+                std.log.err("call error: {s}\n", .{std.mem.span(c.duk_require_lstring(self.ctx, -1, null))});
+            } else {
+                std.log.err("call error: {s}\n", .{std.mem.span(c.duk_safe_to_lstring(self.ctx, -1, null))});
+            }
+
+            c.duk_pop(self.ctx);
             return Error.EvaluationError;
         }
 
