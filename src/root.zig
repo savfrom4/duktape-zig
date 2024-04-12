@@ -50,7 +50,7 @@ pub const Context = struct {
             return Error.EvaluationError;
         }
 
-        return get_stack_value(self);
+        return getStackValue(self);
     }
 
     pub fn compile(self: *Self, code: []const u8) Error!void {
@@ -113,10 +113,14 @@ pub const Context = struct {
             return Error.EvaluationError;
         }
 
-        return get_stack_value(self);
+        return getStackValue(self);
     }
 
-    fn get_stack_value(self: *Self) ?Value {
+    pub fn clearStack(self: *Self) void {
+        c.duk_set_top(self.ctx, 0);
+    }
+
+    fn getStackValue(self: *Self) ?Value {
         const value = switch (c.duk_get_type(self.ctx, -1)) {
             c.DUK_TYPE_NULL => .null,
             c.DUK_TYPE_UNDEFINED => .undefined,
@@ -131,7 +135,6 @@ pub const Context = struct {
             else => null,
         };
 
-        c.duk_pop(self.ctx);
         return value;
     }
 };
