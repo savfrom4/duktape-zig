@@ -122,7 +122,11 @@ pub const Context = struct {
             c.DUK_TYPE_UNDEFINED => .undefined,
             c.DUK_TYPE_BOOLEAN => Value{ .boolean = c.duk_get_boolean(self.ctx, -1) == 1 },
             c.DUK_TYPE_NUMBER => Value{ .number = @floatCast(c.duk_get_number(self.ctx, -1)) },
-            c.DUK_TYPE_STRING => Value{ .string = std.mem.span(c.duk_get_string(self.ctx, -1)) },
+            c.DUK_TYPE_STRING => {
+                var len: c.duk_size_t = 0;
+                const str = c.duk_get_lstring(self.ctx, -1, &len);
+                return Value{ .string = str[0..len] };
+            },
             c.DUK_TYPE_POINTER => Value{ .pointer = c.duk_get_pointer(self.ctx, -1) orelse return .null },
             else => null,
         };
